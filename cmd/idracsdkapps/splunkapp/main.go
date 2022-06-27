@@ -146,8 +146,7 @@ func logToSplunk(events []*SplunkEvent) {
 	if resp.Body != nil {
 		resp.Body.Close()
 	}
-	//log.Printf("Sent to Splunk. Got back %d", resp.StatusCode)
-	fmt.Printf("\nSent to Splunk. Got back %d", resp.StatusCode)
+	log.Printf("Sent to Splunk. Got back %d", resp.StatusCode)
 }
 
 func processValidBuffer(tmp []byte) {
