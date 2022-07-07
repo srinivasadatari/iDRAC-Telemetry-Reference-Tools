@@ -46,6 +46,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"path"
 )
 
 // Use this to set the log level
@@ -75,8 +76,11 @@ type SplunkEvent struct {
 
 var configStringsMu sync.RWMutex
 var configStrings = map[string]string{
-	"splunkURL": "http://10.244.123.128:8088",
-	"splunkKey": "ae9fcc4e-923f-4199-b0c8-2e68aba0cdd6",
+	"splunkURL": "http://SPLUNK_APP_IP_ADDR:PORT",
+	"splunkKey": "SPLUNK_APP_KEY",
+	"iDracIP": "IDRAC_IP_ADDR",
+	"iDracUserName":"IDRAC_USER_NAME",
+	"iDracPassword":"IDRAC_PASSWORD",
 }
 
 type stagDellData struct {
@@ -277,15 +281,25 @@ func main() {
 	// Send a http GET request repeatedly.
 	var outerloop int
 
+	// Extract the config parameters
+	configStringsMu.RLock()
+	iDracIP := configStrings["iDracIP"]
+	iDracUserName := configStrings["iDracUserName"]
+	iDracPassword := configStrings["iDracPassword"]
+	configStringsMu.RUnlock()
+	
+	// Generate the IDRAC SSE URL
+	iDrac_url := path.Join("https://", iDracIP, "redfish/v1/SSE?$filter=EventFormatType%20eq%20MetricReport")
+
 	for {
 
-		req, err := http.NewRequest("GET", "https://100.69.104.132/redfish/v1/SSE?$filter=EventFormatType%20eq%20MetricReport", nil)
+		req, err := http.NewRequest("GET", iDrac_url, nil)
 		if err != nil {
 			fmt.Println("NewRequest GET", req, err)
 		}
 		fmt.Println("NewRequest GET", req, err)
 
-		req.SetBasicAuth("root", "Dell1234")
+		req.SetBasicAuth(iDracUserName, iDracPassword)
 
 		resp, err := client.Do(req)
 		if err != nil {
